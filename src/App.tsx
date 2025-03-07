@@ -1,35 +1,41 @@
-import { useState } from "react";
-import reactLogo from "./assets/react.svg";
-import viteLogo from "/vite.svg";
-import "./App.css";
+// import Location from "./_location";
 
-function App() {
-  const [count, setCount] = useState(0);
+import Location from "@/components/Location";
+import { map, tileLayer } from "leaflet";
+import L from "leaflet";
 
+import { useEffect, useState } from "react";
+import app from "./store/app";
+export default function Map() {
+  const [mapReady, setMapReady] = useState(false);
+  useEffect(() => {
+    const lmap = map("map", {
+      zoomControl: false,
+      attributionControl: false,
+      minZoom: 7,
+      maxBounds: L.latLngBounds(L.latLng(28, 116), L.latLng(42, 128)),
+      inertia: false,
+    }).setView([36, 122], 6);
+    tileLayer(
+      "https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}"
+    ).addTo(lmap);
+    L.control.scale({ position: "bottomright", imperial: false }).addTo(lmap);
+    L.control.zoom({ position: "bottomright" }).addTo(lmap);
+    setMapReady(true);
+    app.map = lmap;
+    return () => {
+      lmap.remove();
+    };
+  }, []);
   return (
-    <>
-      <div>
-        <a href="https://vite.dev" target="_blank">
-          <img src={viteLogo} className="logo" alt="Vite logo" />
-        </a>
-        <a href="https://react.dev" target="_blank">
-          <img src={reactLogo} className="logo react" alt="React logo" />
-        </a>
+    <div className="h-screen">
+      <div className="absolute inset-0 z-10 pointer-events-none">
+        {mapReady && <Location></Location>}
       </div>
-      <h1>Vite + React</h1>
-      <div className="card">
-        <button onClick={() => setCount((count) => count + 1)}>
-          count is {count}
-        </button>
-        <p>
-          Edit <code>src/App.tsx</code> and save to test HMR!
-        </p>
-      </div>
-      <p className="read-the-docs">
-        Click on the Vite and React logos to learn more
-      </p>
-    </>
+      {/* <div className="pointer-events-auto">
+          {mapReady && <DynamicLayer layer={app.mapLayer}></DynamicLayer>}
+        </div> */}
+      <div id="map" className="h-full z-0 relative"></div>
+    </div>
   );
 }
-
-export default App;
